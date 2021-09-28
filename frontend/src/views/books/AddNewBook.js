@@ -16,10 +16,20 @@ import {
     CLabel,
     CSelect,
     CRow,
-    
+    CAlert,
+    CProgress,
+    CInputGroupAppend,
+    CInputGroup,
+    CModal,
+    CModalBody,
+    CModalFooter,
+    CModalHeader,
+    CModalTitle,
+ 
   } from '@coreui/react'
-  import CIcon from '@coreui/icons-react'
-    
+import CIcon from '@coreui/icons-react'
+import { url } from '../../Url';
+
 const AddNewBook = (props) => {
     //const [collapsed, setCollapsed] = React.useState(true)
     //const [showElements, setShowElements] = React.useState(true)
@@ -27,9 +37,21 @@ const AddNewBook = (props) => {
     //your code
     const [books, setBooks] = useState('');
     const [loading, setLoading] = useState(false);
-    //when the function is triggered it takes the token from browser session
-    //and sets in the axios header
-    const token = sessionStorage.getItem('token'); 
+    
+    //for alerts
+    const [feedback, setFeedback] = useState('');
+    const [feedbackType, setFeedbackType] = useState('');
+    const [visible, setVisible] = React.useState(10);
+    
+    //for modal
+    const [modal, setModal] = useState(false);
+    //Modal Input states
+    const [categoryName, setCategoryName] = useState('');
+    const [categorySearchResult, setCategorySearchResult] = useState('');
+
+
+    //set token to url request
+    const token = sessionStorage.getItem('token');
     axios.defaults.headers.common = { 'Authorization' : `Bearer ${token}` }
 
     //inputs
@@ -43,12 +65,16 @@ const AddNewBook = (props) => {
     const [author, setAuthor] = useState('');
     const [amount, setAmount] = useState('');
     const [file, setFile] = useState('');
+    
+    
+    
+    
+    
     //handling dynamic inputs 
     const [categoriesList, setCategoriesList] = useState([]);
     const [publisherList, setPublisherList] = useState([]);
     const [authorList, setAuthorList] = useState([]);
     
-
     //handling dynamic inputs function
     async function getCategories() {
         await axios.get('http://localhost:8000/api/categories').then((response) => { 
@@ -73,8 +99,6 @@ const AddNewBook = (props) => {
     }
 
 
-
-
     useEffect( ()  => {
         setLoading(true);
 
@@ -83,32 +107,38 @@ const AddNewBook = (props) => {
         getAuthors();
 
         setLoading(false);
+        
     }                   
     ,[]);
+
     
-    const adding = document.getElementById('addbtn');                 
+                    
     
-    const normalBtn = () =>{
-        //handle login button
+    const normalBtn = (btn) =>{
+        const adding = document.getElementById(btn); 
         adding.disabled = false;
         adding.color = " primary btn";
         adding.class += " btn ";
-        adding.innerText = 'Add Again'; 
+        
     }
 
-    const loadingBtn = () => {
-        //handle add button
-        
+    const loadingBtn = (btn) => {
+        const adding = document.getElementById(btn);      
         adding.disabled = true;
         adding.innerText = 'Adding Now'; 
     }
 
+    const disabledBtn = (btn) => {
+        const adding = document.getElementById(btn);      
+        adding.disabled = true;
+    }
+     
+
+    
     const AddBook = async (e) => {
         e.preventDefault();
-        loadingBtn();
+        loadingBtn('addBook');
         
-        
-
 
         //formData 
         const formData = new FormData();
@@ -124,25 +154,72 @@ const AddNewBook = (props) => {
         formData.append('file', file);
 
 
-        console.log(formData);
+        //console.log(formData);
         
-        await axios.post('http://localhost:8000/api/books', formData).then(response => { 
-                console.log(response);
-                
-                if(response.data.status === 200){   
-                    console.log('added');
-                    normalBtn();
-                }
+        await axios.post(url+'books', formData).then(response => { 
+            if(response.data.status === 200){   
+                setFeedback(response.data.message);
+                setFeedbackType('success');
+                normalBtn('addBook');
+            }
+            normalBtn('addBook');
         }).catch(error => {
-            console.log(error);
-            normalBtn();
+            normalBtn('addBook');
+            setFeedback(error.message);
+            setFeedbackType('danger');
+            
         });
    }
+
+//////////////////////////// add category ///////////////////
+
+    const AddCategory = async (e) => {
+        e.preventDefault();
+        loadingBtn('addCat');
+       
+        //formData 
+        const formData = new FormData();
+        formData.append('name', categoryName);
+
+        await axios.post(url+'categories', formData).then(response => { 
+            if(response.data.status === 200){   
+                setFeedback(response.data.message);
+                setFeedbackType('success');  
+                normalBtn('addCat');
+            }
+            normalBtn('addCat');
+        }).catch(error => {
+            normalBtn('addCat');
+            setFeedback(error.message);
+            setFeedbackType('danger');
+        });
+    }
+
+    ///////////////////search for a category
+    const SearchCategory = async (e) => {
+        e.preventDefault();
+       
+        await axios.get(url + 'categories/search/'+ categoryName).then(response => { 
+            console.log(response.data.message);
+            if(response.data.status === 200){   
+                setCategorySearchResult(response.data.message);
+                disabledBtn('addCat');
+            }else{
+                normalBtn('addCat'); 
+            }
+        }).catch(error => {
+            normalBtn('addCat'); 
+        });
+    }
+
+
         
     return (
     <div>
     <CRow>
         <CCol xs="12" md="12">
+        
+           
           <CCard>
             <CCardHeader>
               Add a new 
@@ -152,6 +229,8 @@ const AddNewBook = (props) => {
             
               <CForm onSubmit={AddBook}  className="form-horizontal" encType="multipart/form-data"> 
                 <CFormGroup row>
+                    
+
                     <CCol md="2">
                         <CLabel htmlFor="title">Book Title</CLabel>
                     </CCol>
@@ -170,14 +249,12 @@ const AddNewBook = (props) => {
 
                 </CFormGroup>
 
-
-
                 <CFormGroup row>
                     <CCol md="2">
                         <CLabel htmlFor="pages">Pages</CLabel>
                     </CCol>
                     <CCol xs="12" md="4">
-                        <CInput id="pages" name="pages" placeholder="Text" onChange={(e)=>{setPages(e.target.value)}}  />
+                        <CInput id="pages" type="number" name="pages" placeholder="Text" onChange={(e)=>{setPages(e.target.value)}}  />
                         <CFormText>How many pages ?</CFormText>
                     </CCol>
 
@@ -185,15 +262,26 @@ const AddNewBook = (props) => {
                         <CLabel htmlFor="selectLg">Category</CLabel>
                     </CCol>
                     <CCol xs="12" md="4" >
-                        <CSelect custom defaultValue="" name="selectLg" id="selectLg" onChange={(e)=>{setCategory(e.target.value)}} >
-                            <option disabled hidden value="">Select One</option>
-                            { !loading ? (categoriesList.map((category) => (
-                                <option value={category.id} key={category.id}>{category.name}</option>
-                            )) ) : null }  
-                        </CSelect>
+                        <CInputGroup>
+                            <CSelect custom defaultValue="" name="selectLg" id="selectLg" onChange={(e)=>{setCategory(e.target.value)}} >
+                                <option disabled hidden value="">Select One</option>
+                                { !loading ? (categoriesList.map((category) => (
+                                    <option value={category.id} key={category.id}>{category.name}</option>
+                                )) ) : null }  
+                            </CSelect>
+                            <CInputGroupAppend>
+                                    <CButton onClick={() => setModal(!modal)} color="secondary">+</CButton>
+                            </CInputGroupAppend>
+                        </CInputGroup> 
                   </CCol>
 
                 </CFormGroup>
+
+
+                   
+
+
+
 
                 <CFormGroup row>
                     <CCol md="2">
@@ -227,7 +315,7 @@ const AddNewBook = (props) => {
                       name="textarea-input" 
                       id="textarea-input" 
                       rows="9"
-                      placeholder="Content..." 
+                      placeholder="Description ..." 
                       onChange={(e)=>{setDesc(e.target.value)}}
                     />
                   </CCol>
@@ -252,8 +340,8 @@ const AddNewBook = (props) => {
                         <CLabel htmlFor="isbn">Amount Avaiable</CLabel>
                     </CCol>
                     <CCol xs="12" md="3">
-                        <CInput id="isbn" name="isbn" placeholder="Text" onChange={(e)=>{setAmount(e.target.value)}} />
-                        <CFormText>Amount of books avaible</CFormText>
+                        <CInput id="isbn" type="number" name="isbn" placeholder="Text" onChange={(e)=>{setAmount(e.target.value)}} />
+                        <CFormText>Amount of books avaiable</CFormText>
                     </CCol>
 
                     <CLabel col md="1" htmlFor="file-input">Select Book</CLabel>
@@ -265,16 +353,65 @@ const AddNewBook = (props) => {
             </CForm>
 
             </CCardBody>
+            {feedback ? (
+                <CCol xs="12" md="12">
+                    <CAlert color={feedbackType} show={visible} closeButton onShowChange={setVisible}>
+                        {feedback} - closing in {visible}s!
+                        <CProgress striped color={feedbackType} value={Number(visible) * 10} size="xs" className="mb-3"/>
+                    </CAlert>
+                </CCol>
+                ) 
+            : null}
             <CCardFooter>
-              <CButton type="submit" id="addbtn" onClick={AddBook} size="sm" color="primary"><CIcon name="cil-scrubber" /> Add Now </CButton>
+              <CButton type="submit" id="addBook" onClick={AddBook} size="sm" color="primary"><CIcon name="cil-scrubber" /> Add Now </CButton>
               <CButton type="reset" size="sm" color="danger"><CIcon name="cil-ban" /> Reset</CButton>
             </CCardFooter>
           </CCard>
 
         </CCol>
-        
       </CRow>
+
+
+
+    <CModal show={modal} onClose={setModal}>
+        <CModalHeader closeButton>
+            <CModalTitle>Add Category</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+            <CInput onKeyUp={SearchCategory} id="categoryName" name="categoryName" placeholder="Text" onChange={(e)=>{setCategoryName(e.target.value)}}/>
+            <CFormText> { categorySearchResult ? ( <div> <span style={{color: "red", fontWeight:600, fontSize: '20px'}}> {categorySearchResult}  </span> already exsists </div> ) : 'Provide category name' } </CFormText>   
+        </CModalBody>
+        {feedback ? (
+                <CCol xs="12" md="12">
+                    <CAlert color={feedbackType} show={visible} closeButton onShowChange={setVisible}>
+                        {feedback} - closing in {visible}s!
+                        <CProgress striped color={feedbackType} value={Number(visible) * 10} size="xs" className="mb-3"/>
+                    </CAlert>
+                </CCol>
+                ) 
+        : null}
+        <CModalFooter>
+            <CButton onClick={AddCategory} id="addCat" color="primary">Add Category</CButton>{' '}
+            <CButton color="secondary" onClick={() => setModal(false)}>Cancel</CButton>
+        </CModalFooter>
+    </CModal>
+
+
+
+
+    
+
+
+
+
+
+
+
+
       </div>
+
+
+
         );
     
 }

@@ -1,4 +1,4 @@
-import React, {useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 //import { HashRouter, Route, Switch , NavLink } from 'react-router-dom';
 import './scss/style.scss';
@@ -26,12 +26,16 @@ function App() {  // before class App extends Component {
    const [loggedIn, setLoggedIn]= useState(
            sessionStorage.getItem('loggedIn') === 'true' || false
    );
+  
+   
 
 //after successionfull login browser session and state changes to true
-   const login = () => {
-       setLoggedIn(true);
-       sessionStorage.setItem('loggedIn', true);
-   }
+  const login = () => {
+    setLoggedIn(true);
+    sessionStorage.setItem('loggedIn', true); 
+  }
+
+  
 
    //deleteBrowser function sets the browser session token and loggedIn status
    //it also changes the state after log out to show different coditions
@@ -50,13 +54,13 @@ function App() {  // before class App extends Component {
         axios.defaults.headers.common = { 'Authorization' : `Bearer ${token}` } 
 
         await axios.post('http://localhost:8000/api/logout').then(response => { 
-                console.log(response);
-                
-                if(response.data.status === 200){
-                        //the delete browser function is called when there is a success response from API
-                        deleteBrowser();
-                        console.log('session deleted');
-                }
+          console.log(response);
+          
+          if(response.data.status === 200){
+                  //the delete browser function is called when there is a success response from API
+                  deleteBrowser();
+                  console.log('session deleted');
+          }
         });
    }
   

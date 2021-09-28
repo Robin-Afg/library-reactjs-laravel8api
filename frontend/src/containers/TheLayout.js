@@ -7,6 +7,7 @@ import {
   TheHeader
 } from './index'
 
+
 const TheLayout = (props) => {
   if(props.loggedIn){ 
     return (
@@ -15,7 +16,7 @@ const TheLayout = (props) => {
         <div className="c-wrapper">
           <TheHeader logout={props.logout} />
           <div className="c-body">
-            <TheContent/>
+            <TheContent />
           </div>
           <TheFooter/>
         </div>

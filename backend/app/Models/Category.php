@@ -14,4 +14,6 @@ class Category extends Model
         'name',
 
     ];
+
+    public $timestamps = false;
 }

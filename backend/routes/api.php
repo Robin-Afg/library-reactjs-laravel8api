@@ -46,8 +46,12 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
   //Book controller routes
   Route::post('/books', [BookController::class, 'store']);
 
-  //GET routes for book dependencies 
+  //Category routes
   Route::get('/categories', [CategoryController::class, 'index']);
+  Route::post('/categories', [CategoryController::class, 'store']);
+  Route::get('/categories/search/{name}', [CategoryController::class, 'search']);
+  //GET routes for book dependencies 
+  
   Route::get('/publishers', [PublisherController::class, 'index']);
   Route::get('/authors', [AuthorController::class, 'index']);
 });

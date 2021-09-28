@@ -15,7 +15,7 @@ const loading = (
   </div>
 )
 
-const TheContent = () => {
+const TheContent = (props) => {
   return (
     <main className="c-main">
       <CContainer fluid>
@@ -30,7 +30,7 @@ const TheContent = () => {
                   name={route.name}
                   render={props => (
                     <CFade>
-                      <route.component {...props} />
+                      <route.component {...props}  />
                     </CFade>
                   )} />
               )

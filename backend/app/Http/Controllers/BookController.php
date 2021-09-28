@@ -38,7 +38,7 @@ class BookController extends Controller
         $request->validate([
             'title' => 'required',
             'isbn' => 'required',
-            'category' => 'required'
+            'category' => 'required',
             'author_id' => 'required',
             'amount' => 'required',
             'category' => 'required',
@@ -57,6 +57,11 @@ class BookController extends Controller
         $book->amount = $request->amount;
         $book->file = $request->file('file')->store('Books');
         $book->save();
+
+        return response([
+            'message' => ' Successfully Added new book',
+            'status' =>200
+        ], 200);
 
     }
 
